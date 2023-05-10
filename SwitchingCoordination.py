@@ -101,7 +101,7 @@ def UpdateOutData(params,data,outData,t):
     outData['phi'].append(np.copy(data['phi']))
     outData['neighbor'].append(np.copy(data['neighbor'][:]))
     outData['timer'].append(np.copy(data['timer'][:]))
-    outData['order'].append(np.abs(np.mean(np.exp(1j * data['phi']))))
+    outData['results/order'].append(np.abs(np.mean(np.exp(1j * data['phi']))))
 
     return 
 
