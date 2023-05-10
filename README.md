@@ -10,5 +10,6 @@ The result data will not be pushed, as mentioned in the ".gitignore"
 - [ ] Add environment
 - [x] Add a parameter scanning
 - [x] Plot the parameter scanning results
+- [ ] Make the scanning more general, to cover different parameters
 - [ ] Make an animation
 
