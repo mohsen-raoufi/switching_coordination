@@ -8,7 +8,7 @@ The result data will not be pushed, as mentioned in the ".gitignore"
 - [x] Add a .gitignore
 - [ ] Add a workflow
 - [ ] Add environment
-- [ ] Add a parameter scanning
-- [ ] Plot the parameter scanning results
+- [x] Add a parameter scanning
+- [x] Plot the parameter scanning results
 - [ ] Make an animation
 
