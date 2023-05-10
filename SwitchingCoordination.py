@@ -101,7 +101,7 @@ def UpdateOutData(params,data,outData,t):
     outData['phi'].append(np.copy(data['phi']))
     outData['neighbor'].append(np.copy(data['neighbor'][:]))
     outData['timer'].append(np.copy(data['timer'][:]))
-    outData['results/order'].append(np.abs(np.mean(np.exp(1j * data['phi']))))
+    outData['order'].append(np.abs(np.mean(np.exp(1j * data['phi']))))
 
     return 
 
@@ -117,7 +117,7 @@ def SaveResultsToFile(params,outData):
     saveDict={k:v for k,v in outData.items() if k in ['t','order'] }
     df=pd.DataFrame.from_dict(saveDict)
     nameString=GenerateOutputString(params)
-    df.to_csv('order-'+nameString+'.csv',index=False)
+    df.to_csv('results/order-'+nameString+'.csv',index=False)
     
     return
 
