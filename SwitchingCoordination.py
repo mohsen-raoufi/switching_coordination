@@ -1,6 +1,8 @@
 import numpy as np
 import pylab as pl
+import matplotlib.pyplot as plt
 import pandas as pd
+import networkx as nx
 
 def InitParams(N=3,couplingStrength=1.0,noiseStd=0.1,switchingRate=1.0,
                refTime=1.0,dt=0.1,simTime=100.0,outTime=1.0,avgFrequency=0.0,stdFrequency=0.0,writeFile=False):
@@ -106,7 +108,7 @@ def UpdateOutData(params,data,outData,t):
     return 
 
 def GenerateOutputString(params):
-    ''' generate output string for dile name'''
+    ''' generate output string for file name'''
     nameString='N'+str(params['N'])+'-K'+str(params['couplingStrength'])+'-R'+str(params['switchingRate'])+'-sigma'+str(params['noiseStd'])
     nameString=nameString.replace('.','_')
 
@@ -120,6 +122,17 @@ def SaveResultsToFile(params,outData):
     df.to_csv('results/order-'+nameString+'.csv',index=False)
     
     return
+
+def make_network(params, data):
+    ''' return the network given the list of neighbors '''
+    # make an empty directed graph with N nodes
+    G = nx.empty_graph(n=params['N'],create_using=nx.DiGraph())
+
+    # go through the neighbor list and add the corresponding directed edge
+    for node_i in range(G.number_of_nodes()):
+        G.add_edge(*(node_i, data['neighbor'][node_i]))
+    
+    return G
 
 
 def SingleSimulation(params,data=[]):
@@ -138,6 +151,12 @@ def SingleSimulation(params,data=[]):
         data['neighbor'],data['timer'],data['coupling'] = UpdateNetwork(data['neighbor'],data['timer'],data['coupling'],
                                                                         params['switchingRate'],params['dt'],params['N'],
                                                                         params['refTime'],params['couplingStrength'])
+        
+        # G = make_network(params, data)
+        # nx.draw(G, with_labels=True)
+        # plt.draw()
+        # plt.show()
+        print(data['neighbor'])
 
         #write outData 
         if(t % params['outStep']==0):
@@ -148,7 +167,7 @@ def SingleSimulation(params,data=[]):
         SaveResultsToFile(params,outData)
         
 
-    return outData
+    return outData, data
 
 
 
