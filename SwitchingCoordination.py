@@ -156,7 +156,7 @@ def SingleSimulation(params,data=[]):
         # nx.draw(G, with_labels=True)
         # plt.draw()
         # plt.show()
-        print(data['neighbor'])
+        # print(data['neighbor'])
 
         #write outData 
         if(t % params['outStep']==0):
