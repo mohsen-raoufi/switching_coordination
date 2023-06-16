@@ -33,7 +33,8 @@ def InitData(params):
     ''' Initialize dictionaries keeping the simulation data'''
     
     data=dict()
-    
+
+
     # phase/polar angle or heading of the agent
     data['phi']=2*np.pi*np.random.random(params['N'])
     # set Kuramoto frequencies -> if avg and std set to 0 then all omega=0 -> XY model, simple directional alignment
