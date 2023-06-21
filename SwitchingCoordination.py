@@ -4,8 +4,17 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import networkx as nx
 
+# for colormaps of the nodes in the network
+from palettable.cmocean.diverging import Balance_20 as CMap # Curl_20 # Delta_20 # Balance_20
+
+# for saving animation
+# import imageio
+from matplotlib.animation import PillowWriter
+from matplotlib.animation import FFMpegWriter
+
 def InitParams(N=3,couplingStrength=1.0,noiseStd=0.1,switchingRate=1.0,
-               refTime=1.0,dt=0.1,simTime=100.0,outTime=1.0,avgFrequency=0.0,stdFrequency=0.0,writeFile=False,showAnimation=False):
+               refTime=1.0,dt=0.1,simTime=100.0,outTime=1.0,avgFrequency=0.0,stdFrequency=0.0,writeFile=False,
+               showAnimation=False, saveAnimation=False):
 
     ''' Initialize parameter dictionary'''
 
@@ -25,7 +34,8 @@ def InitParams(N=3,couplingStrength=1.0,noiseStd=0.1,switchingRate=1.0,
     params['outStep']=int(outTime/dt) # time steps between outputs to outData
     params['writeFile']=writeFile # write results to file
     params['showAnimation']=showAnimation # bool: show animation of the graph + phase of the agents
-
+    params['saveAnimation']=saveAnimation # bool: save animation as "animation.mp4" 
+           
     return params
 
 
@@ -91,8 +101,10 @@ def UpdateNetwork(neighbor,timer,coupling,switchingRate,dt,N,refTime,couplingStr
     
     nArray=np.arange(N)
     for idx in np.where(switchArray)[0]:
-        # neighbor[idx]=np.random.choice(np.delete(nArray,np.int32([neighbor[idx],idx])))
-        neighbor[idx]=np.random.choice(nArray)#,np.int32([neighbor[idx],idx])))
+        # pick ONE neighbor excluding itself -> NO self-loop
+        neighbor[idx]=np.random.choice(np.delete(nArray,np.int32([neighbor[idx],idx])))
+        # pick ONE neighbor including itself -> self-loop
+        # neighbor[idx]=np.random.choice(nArray)
 
     timer[switchArray]=refTime
     coupling[:]=couplingStrength
@@ -137,35 +149,40 @@ def make_network(params, data):
     
     return G
 
-def draw_animation_frame(params, data, time, fig, ax, node_pos):
+def draw_animation_frame(params, data, outData, time, fig, ax, node_pos, save_animation, moviewriter, animation_frame_list=[]):
     ''' return a figure showing the agents on a graph + their states as color '''
     
     G = make_network(params=params, data=data)
 
-    # Background nodes
-    # nx.draw_networkx_edges(G, ax=ax, edge_color="gray")
-    # null_nodes = nx.draw_networkx_nodes(G, pos=pos, nodelist=set(G.nodes()) - set(path), node_color="white",  ax=ax)
-    # null_nodes.set_edgecolor("black")
+    CMap_MPL = CMap.get_mpl_colormap();
 
-    # Query nodes
-    # query_nodes = nx.draw_networkx_nodes(G, pos=pos, nodelist=path, node_color=idx_colors[:len(path)], ax=ax)
-    # query_nodes.set_edgecolor("white")
-    # nx.draw_networkx_labels(G, pos=pos, labels=dict(zip(path,path)),  font_color="white", ax=ax)
-    # edgelist = [path[k:k+2] for k in range(len(path) - 1)]
-    # nx.draw_networkx_edges(G, pos=pos, edgelist=edgelist, width=idx_weights[:len(path)], ax=ax)
-
+    node_colors = []
+    font_colors = []
+    for tmp_data in data['phi']:
+        node_colors.append(CMap_MPL(tmp_data/np.pi/2))
+        font_colors.append(CMap_MPL(1-(tmp_data/np.pi/2)))
 
     ax.clear()
-
-    nx.draw(G, with_labels=True, pos=node_pos) #, ax=ax)
-    ax.set_title("Frame %d:  order:   "%(time+1))
-    plt.pause(0.0001)
     
-    # ax.set_title("Frame %d:    "%(time+1))
-    # ax.set_xticks([])
-    # ax.set_yticks([])
+    nx.draw(G, with_labels=True, pos=node_pos, node_color=node_colors, 
+            font_color="mintcream", font_weight="bold", verticalalignment='center_baseline')
 
-    # return ax
+    ax.set_title("Frame %d:  order: %f"%((time+1),(outData['order'][-1])))
+    plt.pause(0.0001)
+
+    ## # when using ImageIO library
+    # if(save_animation):
+    #     image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+    #     image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+
+    #     animation_frame_list.append(image)
+    # else:
+    #     animation_frame_list = []
+    
+    if(save_animation):
+        moviewriter.grab_frame()
+
+    # return animation_frame_list
 
 
 def SingleSimulation(params,data=[]):
@@ -177,9 +194,15 @@ def SingleSimulation(params,data=[]):
 
     # make fig and ax for animation visualization
     if(params['showAnimation']):
-        fig, ax = plt.subplots();
+        fig, ax = plt.subplots(figsize=(6,6));
         G_null = nx.empty_graph(n=params['N'],create_using=nx.DiGraph())
         node_pos = nx.circular_layout(G_null)
+
+        animation_frame_list = []
+        # moviewriter = PillowWriter(fps=30) # for GIFs
+        # moviewriter.setup(fig, 'my_movie.gif', dpi=100)
+        moviewriter = FFMpegWriter(fps=30)  # for MP4
+        moviewriter.setup(fig, 'animation.mp4', dpi=100)
 
 
     # perform time loop for simple Euler scheme integration
@@ -192,19 +215,29 @@ def SingleSimulation(params,data=[]):
                                                                         params['switchingRate'],params['dt'],params['N'],
                                                                         params['refTime'],params['couplingStrength'])
         
-        if(params['showAnimation']):
-            draw_animation_frame(params=params, data=data, time=t, ax=ax, fig=fig, node_pos=node_pos)
-        
-
         #write outData 
         if(t % params['outStep']==0):
             UpdateOutData(params,data,outData,t*params['dt'])
+
+        if(params['showAnimation']):
+            draw_animation_frame(params=params, data=data, outData=outData, time=t, 
+                                                        ax=ax, fig=fig, node_pos=node_pos, 
+                                                        save_animation=params['saveAnimation'],
+                                                        moviewriter=moviewriter)
 
 
     # save results to file
     if(params['writeFile']):
         SaveResultsToFile(params,outData)
         
+    if(params['saveAnimation']):
+        # save to a GIF file using ImageIO library
+        # imageio.mimsave("animation.gif", animation_frame_list, duration=0.5)
+        # save to a GIF file using ImageIO library
+        # imageio.mimsave("animation.mp4", animation_frame_list, fps=25, codec="libx264")
+
+        # save the video Writer using matplotlib.animation
+        moviewriter.finish()
 
     return outData, data
 

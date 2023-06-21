@@ -7,10 +7,11 @@ reload(sc)
 
 
 # initialize a parameter dictionary
-params=sc.InitParams(N=3,switchingRate=0.5,
-                     refTime=5.0,noiseStd=.5,
-                     avgFrequency=0.0, writeFile=False, showAnimation=True)
-
+params=sc.InitParams(N=30,switchingRate=0.1,
+                     refTime=0.0,noiseStd=.5,
+                     avgFrequency=0.1, writeFile=False, 
+                     simTime = 50,
+                     showAnimation=True, saveAnimation=True)
 
 
 
