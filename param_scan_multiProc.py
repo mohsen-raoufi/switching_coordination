@@ -103,7 +103,7 @@ for i_switching_rate, switching_rate in enumerate(tqdm(param_scan_dict['switchin
                 # put the time and order arrays into the dict
                 tmp_dict['t'] = np.array(out_data_tmp[0]['t'])
                 tmp_dict['order'] = np.array(out_data_tmp[0]['order'])
-                # tmp_dict["mc_iter"] = mc_iter
+                 #tmp_dict["mc_iter"] = mc_iter
 
                 # append it to the list 
                 out_data_list.append(tmp_dict)
@@ -115,3 +115,22 @@ print(f'Finished in {round(finish-start, 2)} second(s)')
 
 # convert it to a pd.df
 out_data_df = pd.DataFrame(out_data_list)
+
+# add the mean order for each single simulation
+out_data_df['meanOrder'] = [np.mean(x) for x in out_data_df['order']]
+
+N_0 = param_scan_dict['N']['range'][0]
+N_end = param_scan_dict['N']['range'][-1]
+rate_0 = param_scan_dict['switchingRate']['range'][0]
+rate_end = param_scan_dict['switchingRate']['range'][-1]
+mean_order = out_data_df['meanOrder'][0]
+
+# plot single trajectories versus time
+plt.figure(figsize=(10,4))
+plt.title(f'N = {N_0}-{N_end}, switching rate = {rate_0}-{rate_end} (log)')
+plt.plot(out_data_df.loc[0]['t'],(out_data_df.loc[0]['order']),'.-')
+plt.axhline(out_data_df['meanOrder'][0], linestyle='--', color='r', label='mean order')
+plt.xlabel('time')
+plt.ylabel('order')
+plt.legend()
+plt.text(0.2,0.9,f'Finished in {round(finish-start, 2)} second(s), mean order: {mean_order}')
