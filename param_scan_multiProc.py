@@ -34,7 +34,7 @@ n_mc_reps = 32
 out_data = {}
 out_data_list = []
 
-param_scan_dict = {"switchingRate": {"range": np.logspace(0,1,2), "log": True},
+param_scan_dict = {"switchingRate": {"range": np.logspace(-3.0, 2.0, 20), "log": True},
                    "N": {"range": np.linspace(3,15,5), "log": False}}
 
 # initialize a parameter dictionary
@@ -119,13 +119,23 @@ out_data_df = pd.DataFrame(out_data_list)
 # add the mean order for each single simulation
 out_data_df['meanOrder'] = [np.mean(x) for x in out_data_df['order']]
 
+# calculate the mean of the average order over monte-carlo reps.
+avg_order_over_reps =  np.empty(shape=(len(param_scan_dict['N']['range']), len(param_scan_dict['switchingRate']['range'])))
+for i_N, N in enumerate(param_scan_dict['N']['range']):
+    for i_switching_rate, switching_rate in enumerate(param_scan_dict['switchingRate']['range']):
+        out_data_tmp = out_data_df.loc[out_data_df['switchingRate'] == param_scan_dict['switchingRate']['range'][i_switching_rate]]
+        out_data_tmp = out_data_tmp.loc[out_data_tmp['N'] == param_scan_dict['N']['range'][i_N]]
+        avg_order_tmp = np.mean(out_data_tmp['meanOrder'][:])
+        avg_order_over_reps[i_N, i_switching_rate] = avg_order_tmp
+
+'''
 N_0 = param_scan_dict['N']['range'][0]
 N_end = param_scan_dict['N']['range'][-1]
 rate_0 = param_scan_dict['switchingRate']['range'][0]
 rate_end = param_scan_dict['switchingRate']['range'][-1]
 mean_order = out_data_df['meanOrder'][0]
 
-# plot single trajectories versus time
+# plot order parameter versus time
 plt.figure(figsize=(10,4))
 plt.title(f'N = {N_0}-{N_end}, switching rate = {rate_0}-{rate_end} (log)')
 plt.plot(out_data_df.loc[0]['t'],(out_data_df.loc[0]['order']),'.-')
@@ -134,3 +144,4 @@ plt.xlabel('time')
 plt.ylabel('order')
 plt.legend()
 plt.text(0.2,0.9,f'Finished in {round(finish-start, 2)} second(s), mean order: {mean_order}')
+'''
