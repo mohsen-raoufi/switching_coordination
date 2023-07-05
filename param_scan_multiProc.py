@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import SwitchingCoordination as sc
 import numpy as np
 from tqdm import tqdm
+import pickle
 
 import multiprocessing 
 num_processors = multiprocessing.cpu_count()
@@ -34,13 +35,20 @@ n_mc_reps = 32
 out_data = {}
 out_data_list = []
 
-param_scan_dict = {"switchingRate": {"range": np.logspace(-3.0, 2.0, 20), "log": True},
-                   "N": {"range": np.linspace(3,15,5), "log": False}}
+param_scan_dict = {"switchingRate": {"range": np.logspace(-3.0, 2.0, 2), "log": True},
+                   "N": {"range": np.linspace(3,15,2), "log": False}}
 
 # initialize a parameter dictionary
 params = sc.InitParams(N=-1,switchingRate=-1,
                             refTime=ref_time,noiseStd=noise_std,
                             avgFrequency=avg_frequency, writeFile=write_file,showAnimation=False)
+
+# save the params merged with param_scan_dict to a pickle file for later use
+params_to_save = params | param_scan_dict
+fileName = 'scan_'+str(n_mc_reps)+'nMC_'+'switchRate'
+
+with open(f'{fileName}_params.pkl', 'wb') as handle:
+    pickle.dump(params_to_save, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 start = time.perf_counter()
 
@@ -118,6 +126,9 @@ out_data_df = pd.DataFrame(out_data_list)
 
 # add the mean order for each single simulation
 out_data_df['meanOrder'] = [np.mean(x) for x in out_data_df['order']]
+
+#save DataFrame to pickle file
+out_data_df.to_pickle(f'{fileName}_data.pkl')
 
 # calculate the mean of the average order over monte-carlo reps.
 avg_order_over_reps =  np.empty(shape=(len(param_scan_dict['N']['range']), len(param_scan_dict['switchingRate']['range'])))
