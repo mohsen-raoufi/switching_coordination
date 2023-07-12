@@ -6,6 +6,10 @@ __pycache__/
 # Results folder
 results/
 
+# venv folder
+venv/
+
+
 # C extensions
 *.so
 

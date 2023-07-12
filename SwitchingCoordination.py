@@ -1,5 +1,5 @@
 import numpy as np
-import pylab as pl
+# import pylab as pl
 import matplotlib.pyplot as plt
 import pandas as pd
 import networkx as nx
@@ -149,12 +149,13 @@ def make_network(params, data):
     
     return G
 
-def draw_animation_frame(params, data, outData, time, fig, ax, node_pos, save_animation, moviewriter, animation_frame_list=[]): #
+def draw_animation_frame(params, data, outData, time, fig, ax, node_pos, save_animation, 
+                         moviewriter, animation_frame_list=[], with_clocks=False): #
     ''' return a figure showing the agents on a graph + their states as color '''
     
     G = make_network(params=params, data=data)
 
-    CMap_MPL = CMap.get_mpl_colormap();
+    CMap_MPL = CMap.get_mpl_colormap()
 
     node_colors = []
     font_colors = []
@@ -166,8 +167,23 @@ def draw_animation_frame(params, data, outData, time, fig, ax, node_pos, save_an
 
     ax.clear()
     
-    nx.draw_networkx(G, with_labels=True, pos=node_pos, node_color=node_colors, 
-            font_color="mintcream", font_weight="bold", verticalalignment='center_baseline')
+    if(with_clocks):
+        nx.draw_networkx(G, with_labels=True, pos=node_pos, node_color=node_colors, 
+                font_color="mintcream", font_weight="bold", verticalalignment='center_baseline',
+                node_size=1000)
+        node_pos_np = np.array(list(node_pos.values()))
+        arm_length = 0.1
+        arm_delta_pos = arm_length*np.vstack((np.cos(data['phi']), np.sin(data['phi']))).T
+        clock_tip_points = node_pos_np + arm_delta_pos
+
+        # Connect the points with lines
+        for i in range(0, len(clock_tip_points)):
+            ax.plot([node_pos_np[i,0], clock_tip_points[i,0]], [node_pos_np[i,1], clock_tip_points[i,1]], color='r')
+
+        plt.plot()
+    else:
+        nx.draw_networkx(G, with_labels=True, pos=node_pos, node_color=node_colors, 
+                font_color="mintcream", font_weight="bold", verticalalignment='center_baseline')
 
     ax.set_title("Frame %d:  order: %f"%((time+1),(outData['order'][-1])))
     plt.pause(0.0001)
@@ -196,7 +212,7 @@ def SingleSimulation(params,data=[]):
 
     # make fig and ax for animation visualization
     if(params['showAnimation']):
-        fig, ax = plt.subplots(figsize=(6,6));
+        fig, ax = plt.subplots(figsize=(5,5));
         G_null = nx.empty_graph(n=params['N'],create_using=nx.DiGraph())
         node_pos = nx.circular_layout(G_null)
 
@@ -225,7 +241,8 @@ def SingleSimulation(params,data=[]):
             draw_animation_frame(params=params, data=data, outData=outData, time=t, 
                                                         ax=ax, fig=fig, node_pos=node_pos, 
                                                         save_animation=params['saveAnimation'],
-                                                        moviewriter=moviewriter)
+                                                        moviewriter=moviewriter,
+                                                        with_clocks=True)
 
 
     # save results to file

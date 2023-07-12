@@ -35,13 +35,8 @@ n_mc_reps = 32
 out_data = {}
 out_data_list = []
 
-<<<<<<< HEAD
-param_scan_dict = {"switchingRate": {"range": np.logspace(0,1,2), "log": True},
-                   "N": {"range": np.linspace(3,10,15), "log": False}}
-=======
 param_scan_dict = {"switchingRate": {"range": np.logspace(-3.0, 2.0, 2), "log": True},
                    "N": {"range": np.linspace(3,15,2), "log": False}}
->>>>>>> 40245842f60940cc3a9ecb3e5bac115232d5e440
 
 # initialize a parameter dictionary
 params = sc.InitParams(N=-1,switchingRate=-1,
