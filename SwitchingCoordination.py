@@ -158,7 +158,9 @@ def draw_animation_frame(params, data, outData, time, fig, ax, node_pos, save_an
 
     node_colors = []
     font_colors = []
+    node_pos_ring = []
     for tmp_data in data['phi']:
+        # node_pos_ring.append()
         node_colors.append(CMap_MPL(tmp_data/np.pi/2))
         font_colors.append(CMap_MPL(1-(tmp_data/np.pi/2)))
 

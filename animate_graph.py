@@ -14,6 +14,5 @@ params=sc.InitParams(N=30,switchingRate=0.1,
                      showAnimation=True, saveAnimation=True)
 
 
-
 #perform a single simulation
 outData, data = sc.SingleSimulation(params)

@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 import multiprocessing 
 num_processors = multiprocessing.cpu_count()
-print("Number of processors:", num_processors)
+print("Number of processors: ", num_processors)
 
 from joblib import Parallel, delayed
 
@@ -35,7 +35,7 @@ out_data = {}
 out_data_list = []
 
 param_scan_dict = {"switchingRate": {"range": np.logspace(0,1,2), "log": True},
-                   "N": {"range": np.linspace(3,15,5), "log": False}}
+                   "N": {"range": np.linspace(3,10,15), "log": False}}
 
 # initialize a parameter dictionary
 params = sc.InitParams(N=-1,switchingRate=-1,
