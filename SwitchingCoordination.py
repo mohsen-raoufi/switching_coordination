@@ -149,7 +149,7 @@ def make_network(params, data):
     
     return G
 
-def draw_animation_frame(params, data, outData, time, fig, ax, node_pos, save_animation, moviewriter, animation_frame_list=[]):
+def draw_animation_frame(params, data, outData, time, fig, ax, node_pos, save_animation, moviewriter, animation_frame_list=[]): #
     ''' return a figure showing the agents on a graph + their states as color '''
     
     G = make_network(params=params, data=data)
@@ -166,7 +166,7 @@ def draw_animation_frame(params, data, outData, time, fig, ax, node_pos, save_an
 
     ax.clear()
     
-    nx.draw(G, with_labels=True, pos=node_pos, node_color=node_colors, 
+    nx.draw_networkx(G, with_labels=True, pos=node_pos, node_color=node_colors, 
             font_color="mintcream", font_weight="bold", verticalalignment='center_baseline')
 
     ax.set_title("Frame %d:  order: %f"%((time+1),(outData['order'][-1])))
@@ -201,8 +201,8 @@ def SingleSimulation(params,data=[]):
         node_pos = nx.circular_layout(G_null)
 
         animation_frame_list = []
-        # moviewriter = PillowWriter(fps=30) # for GIFs
-        # moviewriter.setup(fig, 'my_movie.gif', dpi=100)
+        #moviewriter = PillowWriter(fps=30) # for GIFs
+        #moviewriter.setup(fig, 'my_movie.gif', dpi=100)
         moviewriter = FFMpegWriter(fps=30)  # for MP4
         moviewriter.setup(fig, 'animation.mp4', dpi=100)
 
