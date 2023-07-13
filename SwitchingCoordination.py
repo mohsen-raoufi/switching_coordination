@@ -6,6 +6,7 @@ import networkx as nx
 
 # for colormaps of the nodes in the network
 from palettable.cmocean.diverging import Balance_20 as CMap # Curl_20 # Delta_20 # Balance_20
+CMap_MPL = CMap.get_mpl_colormap()
 
 # for saving animation
 # import imageio
@@ -153,9 +154,9 @@ def draw_animation_frame(params, data, outData, time, fig, ax, node_pos, save_an
                          moviewriter, animation_frame_list=[], with_clocks=False): #
     ''' return a figure showing the agents on a graph + their states as color '''
     
+    # TODO : we don't need to make the network from null, but rather update the links. check how this speed up the code execution
     G = make_network(params=params, data=data)
 
-    CMap_MPL = CMap.get_mpl_colormap()
 
     node_colors = []
     font_colors = []
@@ -170,7 +171,8 @@ def draw_animation_frame(params, data, outData, time, fig, ax, node_pos, save_an
     if(with_clocks):
         nx.draw_networkx(G, with_labels=True, pos=node_pos, node_color=node_colors, 
                 font_color="mintcream", font_weight="bold", verticalalignment='center_baseline',
-                node_size=1000)
+                node_size=1000,
+                connectionstyle='arc3, rad=0.2')
         node_pos_np = np.array(list(node_pos.values()))
         arm_length = 0.1
         arm_delta_pos = arm_length*np.vstack((np.cos(data['phi']), np.sin(data['phi']))).T
@@ -186,6 +188,81 @@ def draw_animation_frame(params, data, outData, time, fig, ax, node_pos, save_an
                 font_color="mintcream", font_weight="bold", verticalalignment='center_baseline')
 
     ax.set_title("Frame %d:  order: %f"%((time+1),(outData['order'][-1])))
+    plt.pause(0.0001)
+
+
+    ## # when using ImageIO library
+    # if(save_animation):
+    #     image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+    #     image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+
+    #     animation_frame_list.append(image)
+    # else:
+    #     animation_frame_list = []
+    
+    if(save_animation):
+        moviewriter.grab_frame()
+
+    # return animation_frame_list
+
+
+def draw_animation_frame_ring_phase(params, data, outData, time, fig, ax, save_animation, 
+                         moviewriter): #
+    ''' return a figure showing the agents' phase on a ring + graph '''
+    
+    # from pyvis.network import Network
+
+    # TODO : we don't need to make the network from null, but rather update the links. check how this speed up the code execution
+    G = make_network(params=params, data=data)
+
+    node_colors = []
+    for tmp_data in data['phi']:
+        node_colors.append(CMap_MPL(tmp_data/np.pi/2))
+
+    ax.clear()
+    
+    ring_rad = 1
+    node_pos_list = []
+    for tmp_data in data['phi']:
+        node_pos_list.append(np.array(ring_rad*[np.cos(tmp_data), np.sin(tmp_data)]))
+    
+    # nt = Network()
+    # nt.from_nx(G)
+    # nt.set_options(physic=False)
+    # nt.show()
+    nx.draw_networkx(G, with_labels=False, pos=node_pos_list, 
+            connectionstyle='arc3, rad=0.5', node_size=0, alpha=0.25, arrowstyle='-|>', arrowsize=5)
+    
+    node_pos_np = np.array(node_pos_list)
+    arm_length = 0.1
+    arm_delta_pos = arm_length*np.vstack((np.cos(data['phi']), np.sin(data['phi']))).T
+    clock_tip_points = node_pos_np + arm_delta_pos
+
+     # Connect the points with lines
+    for i in range(0, len(clock_tip_points)):
+        ax.plot([node_pos_np[i,0], clock_tip_points[i,0]], [node_pos_np[i,1], clock_tip_points[i,1]], color=node_colors[i])
+
+    phase_ring = plt.Circle((0., 0.), ring_rad, edgecolor='black', facecolor='none', linewidth=0.2)
+    ax.add_artist(phase_ring)
+
+    
+    # node_pos_np = np.array(list(node_pos.values()))
+    # arm_length = 0.1
+    # arm_delta_pos = arm_length*np.vstack((np.cos(data['phi']), np.sin(data['phi']))).T
+    # clock_tip_points = node_pos_np + arm_delta_pos
+
+    # # Connect the points with lines
+    # for i in range(0, len(clock_tip_points)):
+    #     ax.plot([node_pos_np[i,0], clock_tip_points[i,0]], [node_pos_np[i,1], clock_tip_points[i,1]], color='r')
+
+    plt.xlim([-1.2*ring_rad, 1.2*ring_rad])
+    plt.ylim([-1.2*ring_rad, 1.2*ring_rad])
+    
+
+    ax.set_title("Frame %d:  order: %f"%((time+1),(outData['order'][-1])))
+    plt.axis("off")
+
+    plt.plot()
     plt.pause(0.0001)
 
     ## # when using ImageIO library
@@ -238,12 +315,14 @@ def SingleSimulation(params,data=[]):
             UpdateOutData(params,data,outData,t*params['dt'])
 
         if(params['showAnimation']):
-            draw_animation_frame(params=params, data=data, outData=outData, time=t, 
-                                                        ax=ax, fig=fig, node_pos=node_pos, 
-                                                        save_animation=params['saveAnimation'],
-                                                        moviewriter=moviewriter,
-                                                        with_clocks=True)
-
+            # draw_animation_frame(params=params, data=data, outData=outData, time=t, 
+            #                                             ax=ax, fig=fig, node_pos=node_pos, 
+            #                                             save_animation=params['saveAnimation'],
+            #                                             moviewriter=moviewriter,
+            #                                             with_clocks=True)
+            draw_animation_frame_ring_phase(params=params, data=data, outData=outData, time=t,
+                                            fig=fig, ax=ax, save_animation=params['saveAnimation'], 
+                                            moviewriter=moviewriter)
 
     # save results to file
     if(params['writeFile']):
